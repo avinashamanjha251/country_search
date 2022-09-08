@@ -15,7 +15,11 @@ struct SMBaseCityArray: Codable {
      * Instantiate the instance using the passed dictionary values to set the properties values
      */
     init(fromArray array: JSONArray) {
-        cityArray = array.map { SMCityData(fromDictionary: $0) }
+        let aList = array.map { SMCityData(fromDictionary: $0) }
+        let sortedList = aList.sorted {
+            $0.name < $1.name
+        }
+        cityArray = sortedList
     }
     
     init() { }

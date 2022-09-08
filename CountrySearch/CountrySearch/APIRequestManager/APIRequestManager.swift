@@ -30,12 +30,16 @@ class APIRequestManager: APIRequestProtocol {
         return Observable<T>.create { observer in
             self.dataTask = self.session.dataTask(with: self.baseURL,
                                                   completionHandler: { (data, response, error) in
-                guard let dataValue = data else { return }
-                guard let array = try? JSONSerialization.jsonObject(with: dataValue,
-                                                                  options: []) as? JSONArray ?? [] else { return }
-                let baseCityList: SMBaseCityArray = SMBaseCityArray(fromArray: array)
-                observer.onNext(baseCityList as! T)
-                observer.onCompleted()
+                if let err = error {
+                    observer.onError(err)
+                } else  {
+                    guard let dataValue = data else { return }
+                    guard let array = try? JSONSerialization.jsonObject(with: dataValue,
+                                                                        options: []) as? JSONArray ?? [] else { return }
+                    let baseCityList: SMBaseCityArray = SMBaseCityArray(fromArray: array)
+                    observer.onNext(baseCityList as! T)
+                    observer.onCompleted()
+                }
             })
             self.dataTask?.resume()
             return Disposables.create {

@@ -11,7 +11,6 @@ import RxCocoa
 
 class CountryListViewModel {
     
-    private var baseCityArray: SMBaseCityArray = SMBaseCityArray(fromArray: [])
     private let filterCityArray = BehaviorRelay<[SMCityData]>(value: [])
 
     private let disposeBag = DisposeBag()
@@ -23,13 +22,14 @@ class CountryListViewModel {
 
 extension CountryListViewModel {
     
-    func fetchCityList() {
+    func fetchCityList(onCompleted: @escaping (() -> Void)) {
         cityArray = APIRequestManager.shared.callWebserviceForFetchingCitiesList()
         cityArray?.subscribe(onNext: { (value) in
-            self.baseCityArray = value
             self.filterCityArray.accept(value.cityArray)
+            onCompleted()
         }, onError: { (error) in
             print(error.localizedDescription)
+            onCompleted()
         }).disposed(by: disposeBag)
     }
 }
