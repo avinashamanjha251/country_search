@@ -54,6 +54,7 @@ class CountryListTableCell: UITableViewCell {
     }
     
     func setupUIs() {
+        backgroundColor = .clear
         self.addSubview(lblTitle)
         self.addSubview(lblSubTitle)
         self.addSubview(bgSeparator)

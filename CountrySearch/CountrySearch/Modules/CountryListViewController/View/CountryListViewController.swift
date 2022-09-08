@@ -18,7 +18,7 @@ class CountryListViewController: UIViewController {
         return tableView
     }()
     let searchBar: UISearchBar = {
-    let searchBar: UISearchBar = UISearchBar()
+        let searchBar: UISearchBar = UISearchBar()
         searchBar.searchBarStyle = UISearchBar.Style.default
         searchBar.placeholder = " Search..."
         searchBar.sizeToFit()
@@ -26,14 +26,18 @@ class CountryListViewController: UIViewController {
         searchBar.backgroundImage = UIImage()
         return searchBar
     }()
-
+    let bgSeparator: UIView = {
+        let view: UIView = UIView()
+        view.backgroundColor = .lightGray
+        return view
+    }()
     let activityView: UIActivityIndicatorView = UIActivityIndicatorView(style: .large)
     
     let viewModel: CountryListViewModel = CountryListViewModel()
     fileprivate let disposeBag: DisposeBag = DisposeBag()
     let cityList = BehaviorRelay<[SMCityData]>(value: [])
     let filteredList = BehaviorRelay<[SMCityData]>(value: [])
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
@@ -47,14 +51,26 @@ class CountryListViewController: UIViewController {
         view.backgroundColor = .white
         activityView.center = view.center
         view.addSubview(countryTable)
+        view.addSubview(searchBar)
+        view.addSubview(bgSeparator)
         view.addSubview(activityView)
         countryTable.register(CountryListTableCell.self,
                               forCellReuseIdentifier: CountryListTableCell.cellId)
-        countryTable.snp.makeConstraints { (make) -> Void in
-            make.leading.trailing.top.bottom.equalTo(0)
+        searchBar.snp.makeConstraints { (make) -> Void in
+            make.leading.trailing.top.equalTo(view.safeAreaLayoutGuide)
         }
-        countryTable.tableHeaderView = searchBar
+        bgSeparator.snp.makeConstraints { (make) -> Void in
+            make.leading.trailing.bottom.equalTo(searchBar)
+            make.height.equalTo(1)
+        }
+        countryTable.snp.makeConstraints { (make) -> Void in
+            make.leading.trailing.bottom.equalTo(0)
+            make.top.equalTo(searchBar.snp.bottom)
+        }
+        
         countryTable.tableFooterView = UIView()
+        countryTable.keyboardDismissMode = .onDrag
+        countryTable.backgroundColor = .clear
     }
     
     func webServices() {
@@ -77,7 +93,7 @@ class CountryListViewController: UIViewController {
         
         //This binds the table datasource with tableview and also connects the cell to it.
         filteredList.bind(to: countryTable.rx.items(cellIdentifier: CountryListTableCell.cellId,
-                                                              cellType: CountryListTableCell.self)) { row, dataSource, aCell in
+                                                    cellType: CountryListTableCell.self)) { row, dataSource, aCell in
             aCell.configureCellUI(data: dataSource)
             aCell.selectionStyle = .none
         }.disposed(by: disposeBag)
@@ -86,22 +102,53 @@ class CountryListViewController: UIViewController {
         countryTable.rx.itemSelected.subscribe(onNext: { (indexPath) in
             let viewController: MapViewController = MapViewController()
             viewController.viewModel.cityData = self.filteredList.value[indexPath.row]
+            self.hideSearchCancelButton()
             self.navigationController?.pushViewController(viewController, animated: true)
         }).disposed(by: disposeBag)
         
         //Search functionality: Combines the complete data model to search field and binds results to data model binded to the tableview.
         Observable.combineLatest(cityList.asObservable(),
                                  searchBar.rx.text,
-                                 resultSelector: { users, search in
-            return users.filter { (user) -> Bool in
-                self.filterUserList(cityData: user, searchText: search)
+                                 resultSelector: { cities, search in
+            return cities.filter { (city) -> Bool in
+                self.filterUserList(cityData: city, searchText: search)
             }
         }).bind(to: filteredList).disposed(by: disposeBag)
+        
+        let cancelButtonClicked = searchBar.rx.cancelButtonClicked
+        let searchButtonClicked = searchBar.rx.searchButtonClicked
+        setupSearchBarButtonEvent(buttonClicked: cancelButtonClicked)
+        setupSearchBarButtonEvent(buttonClicked: searchButtonClicked)
+        setupSearchBarTextEditEvent()
+    }
+    
+    func setupSearchBarButtonEvent(buttonClicked: ControlEvent<Void>) {
+        buttonClicked
+            .asDriver(onErrorJustReturn: ())
+            .drive(onNext: { [weak self] in
+                self?.hideSearchCancelButton()
+            })
+            .disposed(by: disposeBag)
+    }
+    
+    func setupSearchBarTextEditEvent() {
+        searchBar.rx.textDidBeginEditing.subscribe { [weak searchBar] _ in
+            searchBar?.becomeFirstResponder()
+            searchBar?.showsCancelButton = true
+        }.disposed(by: disposeBag)
+        searchBar.rx.textDidEndEditing.subscribe { [weak self] _ in
+            self?.hideSearchCancelButton()
+        }.disposed(by: disposeBag)
+    }
+    
+    func hideSearchCancelButton() {
+        searchBar.resignFirstResponder()
+        searchBar.showsCancelButton = false
     }
     
     //Search function
-    func filterUserList(cityData: SMCityData, searchText: String?) -> Bool {        
-        if let search = searchText, !search.isEmpty, !cityData.name.hasPrefix(search) {
+    func filterUserList(cityData: SMCityData, searchText: String?) -> Bool {
+        if let search = searchText, !search.isEmpty, !cityData.name.lowercased().hasPrefix(search.lowercased()) {
             return false
         }
         return true
