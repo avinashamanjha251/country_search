@@ -7,6 +7,8 @@
 
 import UIKit
 import SnapKit
+import RxSwift
+import RxCocoa
 
 class CountryListViewController: UIViewController {
     
@@ -15,52 +17,42 @@ class CountryListViewController: UIViewController {
         tableView.separatorStyle = .none
         return tableView
     }()
-    
+    let viewModel: CountryListViewModel = CountryListViewModel()
+    fileprivate let disposeBag = DisposeBag()
+
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         initialSetup()
+        webServices()
+        bindUI()
     }
     
     func initialSetup() {
         title = "Country List"
         view.backgroundColor = .white
         view.addSubview(countryTable)
-        countryTable.dataSource = self
-        countryTable.delegate = self
         countryTable.register(CountryListTableCell.self,
                               forCellReuseIdentifier: CountryListTableCell.cellId)
         countryTable.snp.makeConstraints { (make) -> Void in
             make.leading.trailing.top.bottom.equalTo(0)
         }
-        reloadTable()
-    }    
-}
-
-
-extension CountryListViewController: UITableViewDataSource,
-                                     UITableViewDelegate {
-    
-    func reloadTable() {
-        countryTable.reloadData()
     }
     
-    func tableView(_ tableView: UITableView,
-                   numberOfRowsInSection section: Int) -> Int {
-        10
+    func webServices() {
+        viewModel.fetchCityList()
     }
     
-    func tableView(_ tableView: UITableView,
-                   cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let aCell = countryTable.dequeueReusableCell(withIdentifier: CountryListTableCell.cellId) as! CountryListTableCell
-        aCell.selectionStyle = .none
-        return aCell
-    }
-    
-    func tableView(_ tableView: UITableView,
-                   didSelectRowAt indexPath: IndexPath) {
+    func bindUI() {
+        viewModel.cityObserver.bind(to: countryTable.rx.items(cellIdentifier: CountryListTableCell.cellId,
+                                                              cellType: CountryListTableCell.self)) { row, dataSource, aCell in
+            aCell.configureCellUI(data: dataSource)
+            aCell.selectionStyle = .none
+        }.disposed(by: disposeBag)
         
-        let viewController: MapViewController = MapViewController()
-        navigationController?.pushViewController(viewController, animated: true)
+        countryTable.rx.itemSelected.subscribe(onNext: { (indexPath) in
+            let viewController: MapViewController = MapViewController()
+            self.navigationController?.pushViewController(viewController, animated: true)
+        }).disposed(by: disposeBag)
     }
 }

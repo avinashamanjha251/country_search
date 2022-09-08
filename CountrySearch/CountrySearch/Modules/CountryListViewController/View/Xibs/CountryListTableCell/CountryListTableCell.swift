@@ -28,6 +28,12 @@ class CountryListTableCell: UITableViewCell {
         return label
     }()
     
+    let bgSeparator: UIView = {
+        let view: UIView = UIView()
+        view.backgroundColor = .lightGray
+        return view
+    }()
+    
     override func setSelected(_ selected: Bool,
                               animated: Bool) {
         super.setSelected(selected,
@@ -48,11 +54,9 @@ class CountryListTableCell: UITableViewCell {
     }
     
     func setupUIs() {
-        lblTitle.text = "Hello"
-        lblSubTitle.text = "Hello"
-        self.backgroundColor = .lightGray
         self.addSubview(lblTitle)
         self.addSubview(lblSubTitle)
+        self.addSubview(bgSeparator)
         lblTitle.snp.makeConstraints { (make) -> Void in
             make.leading.trailing.equalTo(self.safeAreaLayoutGuide).offset(10)
             make.top.equalTo(10)
@@ -62,6 +66,15 @@ class CountryListTableCell: UITableViewCell {
             make.leading.trailing.equalTo(self.safeAreaLayoutGuide).offset(10)
             make.bottom.equalTo(-10)
         }
+        bgSeparator.snp.makeConstraints { (make) -> Void in
+            make.leading.trailing.equalTo(self.safeAreaLayoutGuide).offset(10)
+            make.bottom.equalTo(0)
+            make.height.equalTo(1)
+        }
     }
     
+    func configureCellUI(data: SMCityData) {
+        lblTitle.text = data.title
+        lblSubTitle.text = data.subTitle
+    }
 }
