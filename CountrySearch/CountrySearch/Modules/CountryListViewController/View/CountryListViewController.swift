@@ -85,6 +85,7 @@ class CountryListViewController: UIViewController {
         //Replacement to didSelectRowAt() of tableview delegate functions
         countryTable.rx.itemSelected.subscribe(onNext: { (indexPath) in
             let viewController: MapViewController = MapViewController()
+            viewController.viewModel.cityData = self.filteredList.value[indexPath.row]
             self.navigationController?.pushViewController(viewController, animated: true)
         }).disposed(by: disposeBag)
         

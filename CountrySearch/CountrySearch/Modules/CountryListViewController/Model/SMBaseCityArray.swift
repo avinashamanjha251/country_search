@@ -54,6 +54,9 @@ struct SMCityData {
         name = dictionary["name"] as? String ?? ""
     }
     
+    init() {
+        self.init(fromDictionary: [:])
+    }
     
 }
 

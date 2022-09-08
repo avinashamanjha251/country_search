@@ -19,11 +19,14 @@ class MapViewController: UIViewController {
         return mapView
     }()
     
+    let viewModel: MapViewModel = MapViewModel()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         // Do any additional setup after loading the view.
         initialSetup()
+        populateDataOnMap()
     }
     
     func initialSetup() {
@@ -35,5 +38,20 @@ class MapViewController: UIViewController {
             make.leading.trailing.top.equalTo(view.safeAreaLayoutGuide)
             make.bottom.equalTo(0)
         }
+    }
+    
+    func populateDataOnMap() {
+        guard let data = viewModel.cityData else { return }
+        let center = CLLocationCoordinate2D(latitude: data.coord.lat,
+                                            longitude: data.coord.lon)
+        let region = MKCoordinateRegion(center: center,
+                                        span: MKCoordinateSpan(latitudeDelta: 0.01,
+                                                               longitudeDelta: 0.01))
+        mapView.setRegion(region, animated: true)
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = center
+        annotation.title = data.title
+        annotation.subtitle = data.subTitle
+        mapView.addAnnotation(annotation)
     }
 }
