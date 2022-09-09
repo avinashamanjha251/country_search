@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D97377BB28CB795A00563EBC /* APIRequestManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D97377BA28CB795A00563EBC /* APIRequestManagerTests.swift */; };
+		D97377BD28CB803900563EBC /* CountryListViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D97377BC28CB803900563EBC /* CountryListViewModelTests.swift */; };
 		D9C9A52228CA01B800AF5EA9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C9A52128CA01B800AF5EA9 /* AppDelegate.swift */; };
 		D9C9A52428CA01B800AF5EA9 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C9A52328CA01B800AF5EA9 /* SceneDelegate.swift */; };
 		D9C9A52628CA01B800AF5EA9 /* CountryListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9C9A52528CA01B800AF5EA9 /* CountryListViewController.swift */; };
@@ -48,6 +50,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		D97377BA28CB795A00563EBC /* APIRequestManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIRequestManagerTests.swift; sourceTree = "<group>"; };
+		D97377BC28CB803900563EBC /* CountryListViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountryListViewModelTests.swift; sourceTree = "<group>"; };
 		D9C9A51E28CA01B800AF5EA9 /* CountrySearch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CountrySearch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9C9A52128CA01B800AF5EA9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D9C9A52328CA01B800AF5EA9 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -139,6 +143,8 @@
 			isa = PBXGroup;
 			children = (
 				D9C9A53828CA01B900AF5EA9 /* CountrySearchTests.swift */,
+				D97377BA28CB795A00563EBC /* APIRequestManagerTests.swift */,
+				D97377BC28CB803900563EBC /* CountryListViewModelTests.swift */,
 			);
 			path = CountrySearchTests;
 			sourceTree = "<group>";
@@ -430,6 +436,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D97377BD28CB803900563EBC /* CountryListViewModelTests.swift in Sources */,
+				D97377BB28CB795A00563EBC /* APIRequestManagerTests.swift in Sources */,
 				D9C9A53928CA01B900AF5EA9 /* CountrySearchTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -4,13 +4,25 @@
 //	Create by Avinash Aman on 8/9/2022
 //	Copyright © 2022 Avinash Aman. All rights reserved.
 
-
 import Foundation
 
+/********************************************************************
+ CLASS NAME: SMBaseCityArray
+ ********************************************************************
+ DESCRIPTION: Class for saving city data coming from server
+ ********************************************************************
+ CHANGE HISTORY
+ ********************************************************************
+ * Version       : 1.0
+ * Date           : 08/09/2022
+ * Name         : Avinash Aman
+ * Change      : First time implementation
+ ********************************************************************/
+
 struct SMBaseCityArray: Codable {
-    
+
     var cityArray: [SMCityData] = []
-    
+
     /**
      * Instantiate the instance using the passed dictionary values to set the properties values
      */
@@ -21,19 +33,19 @@ struct SMBaseCityArray: Codable {
         }
         cityArray = sortedList
     }
-    
+
     init() { }
     init(from decoder: Decoder) throws { }
     func encode(to encoder: Encoder) throws { }
 }
 
 struct SMCityData {
-    
+
     let id: Int
     let coord: SMCoordinate
     let country: String
     let name: String
-    
+
     var title: String {
         name + ", " + country
     }
@@ -43,9 +55,9 @@ struct SMCityData {
     /**
      * Instantiate the instance using the passed dictionary values to set the properties values
      */
-    init(fromDictionary dictionary: [String:Any]) {
+    init(fromDictionary dictionary: [String: Any]) {
         id = dictionary["_id"] as? Int ?? 0
-        if let coordData = dictionary["coord"] as? [String:Any] {
+        if let coordData = dictionary["coord"] as? [String: Any] {
             coord = SMCoordinate(fromDictionary: coordData)
         } else {
             coord  = SMCoordinate(fromDictionary: [:])
@@ -53,25 +65,22 @@ struct SMCityData {
         country = dictionary["country"] as? String ?? ""
         name = dictionary["name"] as? String ?? ""
     }
-    
+
     init() {
         self.init(fromDictionary: [:])
     }
-    
 }
 
 struct SMCoordinate {
-    
+
     let lat: Double
     let lon: Double
-    
-    
+
     /**
      * Instantiate the instance using the passed dictionary values to set the properties values
      */
-    init(fromDictionary dictionary: [String:Any]) {
+    init(fromDictionary dictionary: [String: Any]) {
         lat = dictionary["lat"] as? Double ?? 0.0
         lon = dictionary["lon"] as? Double ?? 0.0
     }
-    
 }

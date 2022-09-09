@@ -10,14 +10,27 @@ import SnapKit
 import RxSwift
 import RxCocoa
 
+/********************************************************************
+ CLASS NAME: CountryListViewController
+ ********************************************************************
+ DESCRIPTION: Class for display city list along with country namd and coordinates
+ ********************************************************************
+ CHANGE HISTORY
+ ********************************************************************
+ * Version       : 1.0
+ * Date           : 08/09/2022
+ * Name         : Avinash Aman
+ * Change      : First time implementation
+ ********************************************************************/
+
 class CountryListViewController: UIViewController {
-    
-    let countryTable: UITableView = {
+
+    private let countryTable: UITableView = {
         let tableView = UITableView()
         tableView.separatorStyle = .none
         return tableView
     }()
-    let searchBar: UISearchBar = {
+    private let searchBar: UISearchBar = {
         let searchBar: UISearchBar = UISearchBar()
         searchBar.searchBarStyle = UISearchBar.Style.default
         searchBar.placeholder = " Search..."
@@ -26,18 +39,18 @@ class CountryListViewController: UIViewController {
         searchBar.backgroundImage = UIImage()
         return searchBar
     }()
-    let bgSeparator: UIView = {
+    private let bgSeparator: UIView = {
         let view: UIView = UIView()
         view.backgroundColor = .lightGray
         return view
     }()
-    let activityView: UIActivityIndicatorView = UIActivityIndicatorView(style: .large)
-    
-    let viewModel: CountryListViewModel = CountryListViewModel()
+    private let activityView: UIActivityIndicatorView = UIActivityIndicatorView(style: .large)
+
+    private let viewModel: CountryListViewModel = CountryListViewModel()
     fileprivate let disposeBag: DisposeBag = DisposeBag()
-    let cityList = BehaviorRelay<[SMCityData]>(value: [])
-    let filteredList = BehaviorRelay<[SMCityData]>(value: [])
-    
+    private let cityList = BehaviorRelay<[SMCityData]>(value: [])
+    private let filteredList = BehaviorRelay<[SMCityData]>(value: [])
+
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
@@ -45,8 +58,8 @@ class CountryListViewController: UIViewController {
         webServices()
         bindUI()
     }
-    
-    func initialSetup() {
+
+    private func initialSetup() {
         title = "Country List"
         view.backgroundColor = .white
         activityView.center = view.center
@@ -54,8 +67,19 @@ class CountryListViewController: UIViewController {
         view.addSubview(searchBar)
         view.addSubview(bgSeparator)
         view.addSubview(activityView)
+        addConstraintsToUI()
+        configureTableCell()
+    }
+
+    private func configureTableCell() {
         countryTable.register(CountryListTableCell.self,
                               forCellReuseIdentifier: CountryListTableCell.cellId)
+        countryTable.tableFooterView = UIView()
+        countryTable.keyboardDismissMode = .onDrag
+        countryTable.backgroundColor = .clear
+    }
+
+    private func addConstraintsToUI() {
         searchBar.snp.makeConstraints { (make) -> Void in
             make.leading.trailing.top.equalTo(view.safeAreaLayoutGuide)
         }
@@ -67,13 +91,9 @@ class CountryListViewController: UIViewController {
             make.leading.trailing.bottom.equalTo(0)
             make.top.equalTo(searchBar.snp.bottom)
         }
-        
-        countryTable.tableFooterView = UIView()
-        countryTable.keyboardDismissMode = .onDrag
-        countryTable.backgroundColor = .clear
     }
-    
-    func webServices() {
+
+    private func webServices() {
         activityView.startAnimating()
         viewModel.fetchCityList {
             DispatchQueue.main.async { [weak self] in
@@ -81,32 +101,49 @@ class CountryListViewController: UIViewController {
             }
         }
     }
-    
-    func bindUI() {
-        //Here we subscribe the subject in viewModel to get the value here
+
+    private func bindUI() {
+        bindCityObserver()
+        bindCellUI()
+        bindForTableViewDidSelectEvent()
+        bindSearchEvent()
+        bindSearchBarEvents()
+    }
+
+    private func bindCityObserver() {
+        // Here we subscribe the subject in viewModel to get the value here
         viewModel.cityObserver.subscribe(onNext: { (value) in
             self.filteredList.accept(value)
             self.cityList.accept(value)
-        },onError: { error in
+        }, onError: { _ in
             self.errorAlert()
         }).disposed(by: disposeBag)
-        
-        //This binds the table datasource with tableview and also connects the cell to it.
+    }
+
+    private func bindCellUI() {
+        // This binds the table datasource with tableview and also connects the cell to it.
         filteredList.bind(to: countryTable.rx.items(cellIdentifier: CountryListTableCell.cellId,
-                                                    cellType: CountryListTableCell.self)) { row, dataSource, aCell in
+                                                    cellType: CountryListTableCell.self)) { _, dataSource, aCell in
             aCell.configureCellUI(data: dataSource)
             aCell.selectionStyle = .none
         }.disposed(by: disposeBag)
-        
-        //Replacement to didSelectRowAt() of tableview delegate functions
+    }
+
+    private func bindForTableViewDidSelectEvent() {
+        // Replacement to didSelectRowAt() of tableview delegate functions
         countryTable.rx.itemSelected.subscribe(onNext: { (indexPath) in
             let viewController: MapViewController = MapViewController()
             viewController.viewModel.cityData = self.filteredList.value[indexPath.row]
             self.hideSearchCancelButton()
             self.navigationController?.pushViewController(viewController, animated: true)
         }).disposed(by: disposeBag)
-        
-        //Search functionality: Combines the complete data model to search field and binds results to data model binded to the tableview.
+    }
+
+    private func bindSearchEvent() {
+        /*
+         Search functionality: Combines the complete data model to search field
+         and binds results to data model binded to the tableview.
+         */
         Observable.combineLatest(cityList.asObservable(),
                                  searchBar.rx.text,
                                  resultSelector: { cities, search in
@@ -114,15 +151,17 @@ class CountryListViewController: UIViewController {
                 self.filterUserList(cityData: city, searchText: search)
             }
         }).bind(to: filteredList).disposed(by: disposeBag)
-        
+    }
+
+    private func bindSearchBarEvents() {
         let cancelButtonClicked = searchBar.rx.cancelButtonClicked
         let searchButtonClicked = searchBar.rx.searchButtonClicked
         setupSearchBarButtonEvent(buttonClicked: cancelButtonClicked)
         setupSearchBarButtonEvent(buttonClicked: searchButtonClicked)
         setupSearchBarTextEditEvent()
     }
-    
-    func setupSearchBarButtonEvent(buttonClicked: ControlEvent<Void>) {
+
+    private func setupSearchBarButtonEvent(buttonClicked: ControlEvent<Void>) {
         buttonClicked
             .asDriver(onErrorJustReturn: ())
             .drive(onNext: { [weak self] in
@@ -130,8 +169,8 @@ class CountryListViewController: UIViewController {
             })
             .disposed(by: disposeBag)
     }
-    
-    func setupSearchBarTextEditEvent() {
+
+    private func setupSearchBarTextEditEvent() {
         searchBar.rx.textDidBeginEditing.subscribe { [weak searchBar] _ in
             searchBar?.becomeFirstResponder()
             searchBar?.showsCancelButton = true
@@ -140,21 +179,24 @@ class CountryListViewController: UIViewController {
             self?.hideSearchCancelButton()
         }.disposed(by: disposeBag)
     }
-    
-    func hideSearchCancelButton() {
+
+    private func hideSearchCancelButton() {
         searchBar.resignFirstResponder()
         searchBar.showsCancelButton = false
     }
-    
-    //Search function
-    func filterUserList(cityData: SMCityData, searchText: String?) -> Bool {
-        if let search = searchText, !search.isEmpty, !cityData.name.lowercased().hasPrefix(search.lowercased()) {
+
+    // Search function
+    private func filterUserList(cityData: SMCityData,
+                                searchText: String?) -> Bool {
+        if let search = searchText,
+           !search.isEmpty,
+           !cityData.name.lowercased().hasPrefix(search.lowercased()) {
             return false
         }
         return true
     }
-    
-    func errorAlert() {
+
+    private func errorAlert() {
         let alert = UIAlertController(title: "Error",
                                       message: "Check your Internet connection and Try Again!",
                                       preferredStyle: .alert)
